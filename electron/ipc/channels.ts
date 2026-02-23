@@ -58,6 +58,9 @@ export enum IPC {
   // Shell
   ShellReveal = '__shell_reveal',
 
+  // Platform
+  GetPlatformInfo = 'get_platform_info',
+
   // Remote access
   StartRemoteServer = 'start_remote_server',
   StopRemoteServer = 'stop_remote_server',

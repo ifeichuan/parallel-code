@@ -8,9 +8,10 @@ import {
   setTerminalFont,
   setThemePreset,
   setAutoTrustFolders,
+  setUseWsl,
   setInactiveColumnOpacity,
 } from '../store/store';
-import { mod } from '../lib/platform';
+import { mod, isWindows } from '../lib/platform';
 import type { TerminalFont } from '../lib/fonts';
 
 interface SettingsDialogProps {
@@ -149,6 +150,33 @@ export function SettingsDialog(props: SettingsDialogProps) {
             </span>
           </div>
         </label>
+        <Show when={isWindows}>
+          <label
+            style={{
+              display: 'flex',
+              'align-items': 'center',
+              gap: '10px',
+              cursor: 'pointer',
+              padding: '8px 12px',
+              'border-radius': '8px',
+              background: theme.bgInput,
+              border: `1px solid ${theme.border}`,
+            }}
+          >
+            <input
+              type="checkbox"
+              checked={store.useWsl}
+              onChange={(e) => setUseWsl(e.currentTarget.checked)}
+              style={{ 'accent-color': theme.accent, cursor: 'pointer' }}
+            />
+            <div style={{ display: 'flex', 'flex-direction': 'column', gap: '2px' }}>
+              <span style={{ 'font-size': '13px', color: theme.fg }}>Use WSL</span>
+              <span style={{ 'font-size': '11px', color: theme.fgSubtle }}>
+                Run shells and agents inside Windows Subsystem for Linux
+              </span>
+            </div>
+          </label>
+        </Show>
       </div>
 
       <div style={{ display: 'flex', 'flex-direction': 'column', gap: '10px' }}>

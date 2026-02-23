@@ -56,6 +56,7 @@ interface TerminalViewProps {
   autoFocus?: boolean;
   initialCommand?: string;
   isFocused?: boolean;
+  useWsl?: boolean;
 }
 
 // Status parsing only needs recent output. Capping forwarded bytes avoids
@@ -353,6 +354,7 @@ export function TerminalView(props: TerminalViewProps) {
       env: props.env ?? {},
       cols: term.cols,
       rows: term.rows,
+      useWsl: props.useWsl ?? false,
       onOutput,
     }).catch((err) => {
       // Strip control/escape characters to prevent terminal escape injection

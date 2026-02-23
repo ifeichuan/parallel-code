@@ -65,7 +65,7 @@ if (!app.isPackaged) verifyPreloadAllowlist();
 let mainWindow: BrowserWindow | null = null;
 
 function getIconPath(): string | undefined {
-  if (process.platform !== 'linux') return undefined;
+  if (process.platform === 'darwin') return undefined;
   if (app.isPackaged) {
     return path.join(process.resourcesPath, 'icon.png');
   }

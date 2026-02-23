@@ -223,15 +223,29 @@ export function Sidebar() {
     window.addEventListener('mouseup', onUp);
   }
 
-  function abbreviatePath(path: string): string {
+  function abbreviatePath(p: string): string {
+    // Unix: /home/user/... → ~/...
     const home = '/home/';
-    if (path.startsWith(home)) {
-      const rest = path.slice(home.length);
+    if (p.startsWith(home)) {
+      const rest = p.slice(home.length);
       const slashIdx = rest.indexOf('/');
       if (slashIdx !== -1) return '~' + rest.slice(slashIdx);
       return '~';
     }
-    return path;
+    // macOS: /Users/user/... → ~/...
+    const macHome = '/Users/';
+    if (p.startsWith(macHome)) {
+      const rest = p.slice(macHome.length);
+      const slashIdx = rest.indexOf('/');
+      if (slashIdx !== -1) return '~' + rest.slice(slashIdx);
+      return '~';
+    }
+    // Windows: C:\Users\user\... → ~\...
+    const winMatch = p.match(/^[A-Za-z]:\\Users\\[^\\]+(.*)$/);
+    if (winMatch) {
+      return winMatch[1] ? '~' + winMatch[1] : '~';
+    }
+    return p;
   }
 
   // Compute the global taskOrder index for a given task

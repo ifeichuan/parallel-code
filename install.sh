@@ -7,6 +7,10 @@ OS="$(uname -s)"
 cd "$SCRIPT_DIR"
 
 case "$OS" in
+    MINGW*|MSYS*|CYGWIN*)
+        echo "On Windows, please use the .exe installer from Releases."
+        exit 0
+        ;;
     Darwin)
         echo "Building release for macOS..."
         rm -f "$SCRIPT_DIR"/release/*.dmg

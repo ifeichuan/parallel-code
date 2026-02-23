@@ -38,6 +38,7 @@ export const [store, setStore] = createStore<AppStore>({
   themePreset: 'minimal',
   windowState: null,
   autoTrustFolders: false,
+  useWsl: false,
   inactiveColumnOpacity: 0.6,
   newTaskDropUrl: null,
   remoteAccess: {

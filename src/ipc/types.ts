@@ -53,3 +53,8 @@ export interface MergeResult {
   lines_added: number;
   lines_removed: number;
 }
+
+export interface PlatformInfo {
+  isWindows: boolean;
+  isWslAvailable: boolean;
+}

@@ -1,6 +1,13 @@
 import * as pty from 'node-pty';
 import type { BrowserWindow } from 'electron';
 import { RingBuffer } from '../remote/ring-buffer.js';
+import {
+  getDefaultShell,
+  getDefaultShellArgs,
+  resolveCwd,
+  getDefaultHome,
+  wrapCommandForWsl,
+} from './platform.js';
 
 interface PtySession {
   proc: pty.IPty;
@@ -54,12 +61,27 @@ export function spawnAgent(
     env: Record<string, string>;
     cols: number;
     rows: number;
+    useWsl?: boolean;
     onOutput: { __CHANNEL_ID__: string };
   },
 ): void {
   const channelId = args.onOutput.__CHANNEL_ID__;
-  const command = args.command || process.env.SHELL || '/bin/sh';
-  const cwd = args.cwd || process.env.HOME || '/';
+  const useWsl = args.useWsl === true;
+
+  let command: string;
+  let spawnArgs: string[];
+  const cwd = resolveCwd(args.cwd || undefined, useWsl) || getDefaultHome();
+
+  if (args.command) {
+    // Agent mode — wrap for WSL if needed
+    const wrapped = wrapCommandForWsl(args.command, args.args, useWsl);
+    command = wrapped.command;
+    spawnArgs = wrapped.args;
+  } else {
+    // Shell mode
+    command = getDefaultShell(useWsl);
+    spawnArgs = args.args.length > 0 ? args.args : getDefaultShellArgs(useWsl);
+  }
 
   // Reject commands with shell metacharacters (node-pty uses execvp, but
   // guard against accidental misuse). Allow bare names (resolved via PATH)
@@ -103,7 +125,7 @@ export function spawnAgent(
   delete spawnEnv.CLAUDE_CODE_SESSION;
   delete spawnEnv.CLAUDE_CODE_ENTRYPOINT;
 
-  const proc = pty.spawn(command, args.args, {
+  const proc = pty.spawn(command, spawnArgs.length > 0 ? spawnArgs : args.args, {
     name: 'xterm-256color',
     cols: args.cols,
     rows: args.rows,

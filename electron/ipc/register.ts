@@ -29,6 +29,7 @@ import {
 import { createTask, deleteTask } from './tasks.js';
 import { listAgents } from './agents.js';
 import { saveAppState, loadAppState } from './persistence.js';
+import { isWindows, isWslAvailable } from './platform.js';
 import path from 'path';
 
 /** Reject paths that are non-absolute or attempt directory traversal. */
@@ -70,6 +71,12 @@ export function registerAllHandlers(win: BrowserWindow): void {
 
   // --- Agent commands ---
   ipcMain.handle(IPC.ListAgents, () => listAgents());
+
+  // --- Platform info ---
+  ipcMain.handle(IPC.GetPlatformInfo, () => ({
+    isWindows,
+    isWslAvailable: isWslAvailable(),
+  }));
 
   // --- Task commands ---
   ipcMain.handle(IPC.CreateTask, (_e, args) => {

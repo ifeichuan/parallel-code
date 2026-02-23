@@ -105,6 +105,7 @@ export interface PersistedState {
   themePreset?: LookPreset;
   windowState?: PersistedWindowState;
   autoTrustFolders?: boolean;
+  useWsl?: boolean;
   inactiveColumnOpacity?: number;
 }
 
@@ -162,6 +163,7 @@ export interface AppStore {
   themePreset: LookPreset;
   windowState: PersistedWindowState | null;
   autoTrustFolders: boolean;
+  useWsl: boolean;
   inactiveColumnOpacity: number;
   newTaskDropUrl: string | null;
   remoteAccess: RemoteAccess;

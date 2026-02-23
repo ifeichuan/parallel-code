@@ -728,9 +728,10 @@ export function TaskPanel(props: TaskPanelProps) {
                           isFocused={
                             props.isActive && store.focusedPanel[props.task.id] === `shell:${i()}`
                           }
-                          command={getShellCommand()}
-                          args={['-l']}
+                          command=""
+                          args={[]}
                           cwd={props.task.worktreePath}
+                          useWsl={store.useWsl}
                           initialCommand={initialCommand}
                           onExit={(info) =>
                             setShellExits(shellId, {
@@ -874,6 +875,7 @@ export function TaskPanel(props: TaskPanelProps) {
                             : []),
                         ]}
                         cwd={props.task.worktreePath}
+                        useWsl={store.useWsl}
                         onExit={(code) => markAgentExited(a().id, code)}
                         onData={(data) => markAgentOutput(a().id, data, props.task.id)}
                         onPromptDetected={(text) => setLastPrompt(props.task.id, text)}
@@ -1034,9 +1036,4 @@ export function TaskPanel(props: TaskPanelProps) {
       <EditProjectDialog project={editingProject()} onClose={() => setEditingProjectId(null)} />
     </div>
   );
-}
-
-function getShellCommand(): string {
-  // Empty string tells the backend to use $SHELL (Unix) or %COMSPEC% (Windows)
-  return '';
 }

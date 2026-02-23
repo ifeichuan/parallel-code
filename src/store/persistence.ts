@@ -37,6 +37,7 @@ export async function saveState(): Promise<void> {
     themePreset: store.themePreset,
     windowState: store.windowState ? { ...store.windowState } : undefined,
     autoTrustFolders: store.autoTrustFolders,
+    useWsl: store.useWsl,
     inactiveColumnOpacity: store.inactiveColumnOpacity,
   };
 
@@ -223,6 +224,7 @@ export async function loadState(): Promise<void> {
       s.windowState = parsePersistedWindowState(rawAny.windowState);
       s.autoTrustFolders =
         typeof rawAny.autoTrustFolders === 'boolean' ? rawAny.autoTrustFolders : false;
+      s.useWsl = typeof rawAny.useWsl === 'boolean' ? rawAny.useWsl : false;
       const rawOpacity = rawAny.inactiveColumnOpacity;
       s.inactiveColumnOpacity =
         typeof rawOpacity === 'number' &&

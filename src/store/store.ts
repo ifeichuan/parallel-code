@@ -77,6 +77,7 @@ export {
   setTerminalFont,
   setThemePreset,
   setAutoTrustFolders,
+  setUseWsl,
   setInactiveColumnOpacity,
   setWindowState,
 } from './ui';

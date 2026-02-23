@@ -1,4 +1,5 @@
 export const isMac = navigator.userAgent.includes('Mac');
+export const isWindows = navigator.userAgent.includes('Win');
 
 /** Display name for the primary modifier key: "Cmd" on macOS, "Ctrl" elsewhere. */
 export const mod = isMac ? 'Cmd' : 'Ctrl';
