@@ -7,6 +7,7 @@ import {
   resolveCwd,
   getDefaultHome,
   wrapCommandForWsl,
+  shouldUseWsl,
 } from './platform.js';
 
 interface PtySession {
@@ -66,7 +67,7 @@ export function spawnAgent(
   },
 ): void {
   const channelId = args.onOutput.__CHANNEL_ID__;
-  const useWsl = args.useWsl === true;
+  const useWsl = args.useWsl === true || shouldUseWsl(args.cwd);
 
   let command: string;
   let spawnArgs: string[];

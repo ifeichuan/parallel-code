@@ -22,6 +22,29 @@ export function isWslAvailable(): boolean {
   return wslAvailableCache;
 }
 
+/** Check if a path is a UNC path pointing into WSL filesystem (\\wsl.localhost\ or \\wsl$\). */
+export function isWslUncPath(p: string): boolean {
+  if (!isWindows) return false;
+  const lower = p.replace(/\\/g, '/').toLowerCase();
+  return lower.startsWith('//wsl.localhost/') || lower.startsWith('//wsl$/');
+}
+
+/**
+ * Convert a WSL UNC path to a Linux path.
+ * E.g. `\\wsl.localhost\Ubuntu\home\foo` → `/home/foo`
+ */
+export function wslUncToLinuxPath(uncPath: string): string {
+  const normalized = uncPath.replace(/\\/g, '/');
+  const match = normalized.match(/^\/\/wsl(?:\.localhost|\$)\/[^/]+(\/.*)/i);
+  return match ? match[1] : uncPath;
+}
+
+/** Auto-detect whether WSL should be used based on the cwd path. */
+export function shouldUseWsl(cwd: string | undefined): boolean {
+  if (!isWindows) return false;
+  return !!cwd && isWslUncPath(cwd);
+}
+
 /** Convert a Windows path like `C:\Users\foo` to a WSL path like `/mnt/c/Users/foo`. */
 export function windowsToWslPath(winPath: string): string {
   const normalized = winPath.replace(/\\/g, '/');
@@ -60,11 +83,12 @@ export function getDefaultHome(): string {
   return process.env.HOME || '/';
 }
 
-/** Resolve cwd, converting Windows paths to WSL paths when in WSL mode. */
+/** Resolve cwd, converting paths to WSL-native format when in WSL mode. */
 export function resolveCwd(cwd: string | undefined, useWsl: boolean): string {
   const resolved = cwd || getDefaultHome();
-  if (useWsl && isWindows && /^[A-Za-z]:/.test(resolved)) {
-    return windowsToWslPath(resolved);
+  if (useWsl && isWindows) {
+    if (isWslUncPath(resolved)) return wslUncToLinuxPath(resolved);
+    if (/^[A-Za-z]:/.test(resolved)) return windowsToWslPath(resolved);
   }
   return resolved;
 }

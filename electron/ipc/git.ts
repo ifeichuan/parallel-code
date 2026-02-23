@@ -2,8 +2,26 @@ import { execFile } from 'child_process';
 import { promisify } from 'util';
 import fs from 'fs';
 import path from 'path';
+import { isWindows, isWslUncPath, wslUncToLinuxPath } from './platform.js';
 
-const exec = promisify(execFile);
+const execRaw = promisify(execFile);
+
+/** Execute a command. Automatically routes git through WSL when cwd is inside WSL filesystem. */
+function exec(
+  cmd: string,
+  args: string[],
+  options?: { cwd?: string; maxBuffer?: number },
+): Promise<{ stdout: string; stderr: string }> {
+  const cwd = options?.cwd;
+  if (cmd === 'git' && cwd && isWindows && isWslUncPath(cwd)) {
+    const linuxCwd = wslUncToLinuxPath(cwd);
+    const convertedArgs = args.map((a) => (isWslUncPath(a) ? wslUncToLinuxPath(a) : a));
+    return execRaw('wsl.exe', ['-e', 'git', '-C', linuxCwd, ...convertedArgs], {
+      maxBuffer: options?.maxBuffer,
+    }) as Promise<{ stdout: string; stderr: string }>;
+  }
+  return execRaw(cmd, args, options) as Promise<{ stdout: string; stderr: string }>;
+}
 
 // --- TTL Caches ---
 //  Test
