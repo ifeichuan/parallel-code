@@ -90,11 +90,24 @@ export function spawnAgent(
     cwd = args.cwd || getDefaultHome();
 
     if (args.command) {
-      // Agent mode
+      // Agent mode: use login shell so PATH includes tools from nvm/volta/etc.
+      // Pattern: bash -lic 'exec "$@"' bash <cmd> <args...>
+      // This sources .profile/.bashrc for PATH, then exec replaces bash with
+      // the target command so it gets the PTY directly.
       command = 'wsl.exe';
-      spawnArgs = ['--cd', wslCwd, '-e', args.command, ...args.args];
+      spawnArgs = [
+        '--cd',
+        wslCwd,
+        '-e',
+        'bash',
+        '-lic',
+        'exec "$@"',
+        'bash',
+        args.command,
+        ...args.args,
+      ];
     } else {
-      // Shell mode
+      // Shell mode: interactive login shell
       command = 'wsl.exe';
       spawnArgs = ['--cd', wslCwd, '-e', 'bash', '-l'];
     }
