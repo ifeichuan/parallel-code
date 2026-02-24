@@ -2,12 +2,14 @@ import * as pty from 'node-pty';
 import type { BrowserWindow } from 'electron';
 import { RingBuffer } from '../remote/ring-buffer.js';
 import {
+  isWindows,
   getDefaultShell,
   getDefaultShellArgs,
-  resolveCwd,
   getDefaultHome,
-  wrapCommandForWsl,
   shouldUseWsl,
+  isWslUncPath,
+  wslUncToLinuxPath,
+  windowsToWslPath,
 } from './platform.js';
 
 interface PtySession {
@@ -71,17 +73,42 @@ export function spawnAgent(
 
   let command: string;
   let spawnArgs: string[];
-  const cwd = resolveCwd(args.cwd || undefined, useWsl) || getDefaultHome();
+  let cwd: string;
 
-  if (args.command) {
-    // Agent mode — wrap for WSL if needed
-    const wrapped = wrapCommandForWsl(args.command, args.args, useWsl);
-    command = wrapped.command;
-    spawnArgs = wrapped.args;
+  if (useWsl && isWindows) {
+    // WSL mode: spawn wsl.exe with --cd to set the working directory inside WSL.
+    // pty.spawn needs a Windows-valid cwd (UNC or drive letter), so we keep
+    // the original path for node-pty and pass the Linux path via --cd.
+    let wslCwd: string;
+    if (args.cwd && isWslUncPath(args.cwd)) {
+      wslCwd = wslUncToLinuxPath(args.cwd);
+    } else if (args.cwd && /^[A-Za-z]:/.test(args.cwd)) {
+      wslCwd = windowsToWslPath(args.cwd);
+    } else {
+      wslCwd = args.cwd || '/root';
+    }
+    cwd = args.cwd || getDefaultHome();
+
+    if (args.command) {
+      // Agent mode
+      command = 'wsl.exe';
+      spawnArgs = ['--cd', wslCwd, '-e', args.command, ...args.args];
+    } else {
+      // Shell mode
+      command = 'wsl.exe';
+      spawnArgs = ['--cd', wslCwd, '-e', 'bash', '-l'];
+    }
   } else {
-    // Shell mode
-    command = getDefaultShell(useWsl);
-    spawnArgs = args.args.length > 0 ? args.args : getDefaultShellArgs(useWsl);
+    // Native mode (Unix, or Windows without WSL)
+    cwd = args.cwd || getDefaultHome();
+
+    if (args.command) {
+      command = args.command;
+      spawnArgs = args.args;
+    } else {
+      command = getDefaultShell(false);
+      spawnArgs = args.args.length > 0 ? args.args : getDefaultShellArgs(false);
+    }
   }
 
   // Reject commands with shell metacharacters (node-pty uses execvp, but
@@ -126,7 +153,7 @@ export function spawnAgent(
   delete spawnEnv.CLAUDE_CODE_SESSION;
   delete spawnEnv.CLAUDE_CODE_ENTRYPOINT;
 
-  const proc = pty.spawn(command, spawnArgs.length > 0 ? spawnArgs : args.args, {
+  const proc = pty.spawn(command, spawnArgs, {
     name: 'xterm-256color',
     cols: args.cols,
     rows: args.rows,
